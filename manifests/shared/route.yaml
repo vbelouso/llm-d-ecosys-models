@@ -1,0 +1,15 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: inference-gateway
+  namespace: agentgateway-system
+  annotations:
+    haproxy.router.openshift.io/timeout: 300s
+spec:
+  to:
+    kind: Service
+    name: inference-gateway
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge

@@ -1,0 +1,32 @@
+modelArtifacts:
+  uri: "pvc://qwen35-35b-a3b-pvc/hub/Qwen/Qwen3.5-35B-A3B"
+  name: "Qwen/Qwen3.5-35B-A3B"
+  size: 80Gi
+  authSecretName: "llm-d-hf-token"
+  labels:
+    app: "vllm-qwen35-35b-a3b" # Must match inferencePool.modelServers.matchLabels.app
+
+routing:
+  servicePort: 8000
+
+accelerator:
+  type: nvidia
+
+decode:
+  containers:
+    - name: "vllm"
+      image: "vllm/vllm-openai:v0.17.0"
+      modelCommand: vllmServe
+      args:
+        - "--enable-auto-tool-choice"
+        - "--tool-call-parser"
+        - "hermes"
+        - "--disable-access-log-for-endpoints"
+        - "/health,/metrics,/ping"
+      env:
+        - name: HOME
+          value: /tmp
+      mountModelVolume: true
+
+prefill:
+  create: false

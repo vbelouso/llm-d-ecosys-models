@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: tei-all-mpnet-base-v2
+  annotations:
+    haproxy.router.openshift.io/timeout: 300s
+spec:
+  to:
+    kind: Service
+    name: tei-all-mpnet-base-v2
+  port:
+    targetPort: http
+  tls:
+    termination: edge

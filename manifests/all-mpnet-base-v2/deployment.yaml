@@ -1,0 +1,62 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tei-all-mpnet-base-v2
+  labels:
+    app: tei-all-mpnet-base-v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tei-all-mpnet-base-v2
+  template:
+    metadata:
+      labels:
+        app: tei-all-mpnet-base-v2
+    spec:
+      volumes:
+        - name: model-cache
+          persistentVolumeClaim:
+            claimName: all-mpnet-base-v2-pvc
+      containers:
+        - name: tei
+          image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.6
+          args:
+            - --model-id
+            - sentence-transformers/all-mpnet-base-v2
+            - --port
+            - "8080"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: model-cache
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tei-all-mpnet-base-v2
+  labels:
+    app: tei-all-mpnet-base-v2
+spec:
+  selector:
+    app: tei-all-mpnet-base-v2
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

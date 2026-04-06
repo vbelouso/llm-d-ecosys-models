@@ -1,0 +1,23 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: bbr
+  namespace: agentgateway-system
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: inference-gateway
+  traffic:
+    phase: PreRouting
+    transformation:
+      request:
+        set:
+        - name: X-Gateway-Base-Model-Name
+          value: |
+            {
+              "Qwen/Qwen3.5-35B-A3B": "Qwen/Qwen3.5-35B-A3B",
+              "Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled": "Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled",
+              "Qwen/Qwen3-Next-80B-A3B-Thinking": "Qwen/Qwen3-Next-80B-A3B-Thinking",
+              "Qwen/Qwen3.5-9B": "Qwen/Qwen3.5-9B"
+            }[json(request.body).model]
