@@ -1,0 +1,35 @@
+modelArtifacts:
+  uri: "pvc://qwen3-next-80b-pvc/hub/RedHatAI/Qwen3-Next-80B-A3B-Thinking-FP8-dynamic"
+  name: "Qwen/Qwen3-Next-80B-A3B-Thinking"
+  size: 180Gi
+  authSecretName: "llm-d-hf-token"
+  labels:
+    app: "vllm-qwen3-next-80b" # Must match inferencePool.modelServers.matchLabels.app
+
+routing:
+  servicePort: 8000
+
+accelerator:
+  type: nvidia
+
+decode:
+  containers:
+    - name: "vllm"
+      image: "vllm/vllm-openai:v0.17.0"
+      modelCommand: vllmServe
+      args:
+        - "--enable-auto-tool-choice"
+        - "--tool-call-parser"
+        - "hermes"
+        - "--disable-access-log-for-endpoints"
+        - "/health,/metrics,/ping"
+        - "--trust-remote-code"
+        - "--max-model-len"
+        - "32768"
+      env:
+        - name: HOME
+          value: /tmp
+      mountModelVolume: true
+
+prefill:
+  create: false

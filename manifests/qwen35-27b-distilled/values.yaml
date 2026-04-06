@@ -1,0 +1,33 @@
+modelArtifacts:
+  uri: "pvc://qwen35-27b-distilled-pvc/hub/Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled"
+  name: "Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled"
+  size: 60Gi
+  authSecretName: "llm-d-hf-token"
+  labels:
+    app: "vllm-qwen35-27b-distilled" # Must match inferencePool.modelServers.matchLabels.app
+
+routing:
+  servicePort: 8000
+
+accelerator:
+  type: nvidia
+
+decode:
+  containers:
+    - name: "vllm"
+      image: "vllm/vllm-openai:v0.17.0"
+      modelCommand: vllmServe
+      args:
+        - "--enable-auto-tool-choice"
+        - "--tool-call-parser"
+        - "hermes"
+        - "--disable-access-log-for-endpoints"
+        - "/health,/metrics,/ping"
+        - "--trust-remote-code"
+      env:
+        - name: HOME
+          value: /tmp
+      mountModelVolume: true
+
+prefill:
+  create: false
