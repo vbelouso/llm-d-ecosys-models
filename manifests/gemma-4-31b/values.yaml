@@ -1,0 +1,33 @@
+modelArtifacts:
+  uri: "pvc://gemma-4-31b-pvc/hub/google/gemma-4-31b-it"
+  name: "google/gemma-4-31b-it"
+  size: 70Gi
+  authSecretName: "llm-d-hf-token"
+  labels:
+    app: "vllm-gemma-4-31b" # Must match inferencePool.modelServers.matchLabels.app
+
+routing:
+  servicePort: 8000
+
+accelerator:
+  type: nvidia
+
+decode:
+  containers:
+    - name: "vllm"
+      image: "vllm/vllm-openai:gemma4"
+      modelCommand: vllmServe
+      args:
+        - "--enable-auto-tool-choice"
+        - "--tool-call-parser"
+        - "gemma4"
+        - "--disable-access-log-for-endpoints"
+        - "/health,/metrics,/ping"
+        - "--trust-remote-code"
+      env:
+        - name: HOME
+          value: /tmp
+      mountModelVolume: true
+
+prefill:
+  create: false

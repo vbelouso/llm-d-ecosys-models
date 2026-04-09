@@ -15,38 +15,39 @@ This repository contains manifests to deploy large language models and embedding
 
 ### Deployed Models
 
-| Model | Size | Type | Context Length | Use Case |
-| ------- | ------ | ------ | ---------------- | ---------- |
-| `Qwen/Qwen3.5-35B-A3B` | 35B | MoE (3B active) | 32K | General purpose, efficient |
-| `Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled` | 27B | Dense | 32K | Reasoning, Claude-like |
-| `Qwen/Qwen3-Next-80B-A3B-Thinking` | 80B | MoE (3B active), FP8 | 32K | Large-scale reasoning |
-| `Qwen/Qwen3.5-9B` | 9B | Dense | 32K | Fast inference |
-| `sentence-transformers/all-mpnet-base-v2` | 438MB | Embeddings | - | Text embeddings (CPU) |
+- **[google/gemma-4-26b-a4b-it](manifests/gemma-4-26b-a4b/)** - [HuggingFace](https://huggingface.co/google/gemma-4-26b-a4b-it)
+- **[google/gemma-4-31b-it](manifests/gemma-4-31b/)** - [HuggingFace](https://huggingface.co/google/gemma-4-31b-it)
+- **[Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled](manifests/qwen35-27b-distilled/)** - [HuggingFace](https://huggingface.co/Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled)
+- **[Qwen/Qwen3.5-35B-A3B](manifests/qwen35-35b-a3b/)** - [HuggingFace](https://huggingface.co/Qwen/Qwen3.5-35B-A3B)
+- **[Qwen/Qwen3.5-9B](manifests/qwen35-9b/)** - [HuggingFace](https://huggingface.co/Qwen/Qwen3.5-9B)
+- **[Qwen/Qwen3-Next-80B-A3B-Thinking](manifests/qwen3-next-80b/)** - [HuggingFace](https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Thinking)
+- **[sentence-transformers/all-mpnet-base-v2](manifests/all-mpnet-base-v2/)** - [HuggingFace](https://huggingface.co/sentence-transformers/all-mpnet-base-v2)
+
+Each model folder contains deployment manifests and model-specific README with deployment instructions.
 
 ## Repository Structure
 
 ```text
 manifests/
-├── qwen35-35b-a3b/          # Qwen3.5-35B-A3B model
+├── qwen35-35b-a3b/
+│   ├── README.md            # Model-specific deployment guide
 │   ├── pvc.yaml
 │   ├── download.yaml
 │   └── values.yaml
-├── qwen35-27b-distilled/    # Qwen3.5-27B-distilled model
+├── qwen35-27b-distilled/
+├── qwen3-next-80b/
+├── qwen35-9b/
+├── gemma-4-26b-a4b/
+│   ├── README.md            # Gemma 4 26B deployment guide
 │   ├── pvc.yaml
 │   ├── download.yaml
 │   └── values.yaml
-├── qwen3-next-80b/          # Qwen3-Next-80B FP8 model
-│   ├── pvc.yaml
-│   ├── download.yaml
-│   └── values.yaml
-├── qwen35-9b/               # Qwen3.5-9B model
+├── gemma-4-31b/
+│   ├── README.md            # Gemma 4 31B deployment guide
 │   ├── pvc.yaml
 │   ├── download.yaml
 │   └── values.yaml
 ├── all-mpnet-base-v2/       # Embeddings model (TEI)
-│   ├── pvc.yaml
-│   ├── deployment.yaml
-│   └── route.yaml
 └── shared/                  # Gateway and routing infrastructure
     ├── gateway.yaml
     ├── scc-binding.yaml
@@ -71,19 +72,19 @@ The deployment uses Gateway API with body-based routing to direct requests to di
 - **Decode-only mode**: Prefill pods disabled (`prefill.create: false`) - all inference runs through decode pods
 - **PVC-based model storage**: Models pre-downloaded to RWO PersistentVolumeClaims for fast startup
 - **FP8 quantization for 80B**: Qwen3-Next-80B uses FP8-dynamic for memory efficiency
-- **vLLM v0.17.0+**: Required for Qwen3.5 support and tool calling features
+- **vLLM version selection**: Each model family may require specific vLLM versions and Docker images
+- **Tool calling**: Qwen models use `hermes` parser, Gemma 4 uses `gemma4` parser
 
 ## Prerequisites
 
 ### Required Components
 
-1. **OpenShift 4.14+** with NVIDIA GPU Operator
-2. **NVIDIA GPUs** (e.g., H100, H200, A100)
-3. **Gateway API CRDs** v1.2.0+
-4. **Gateway API Inference Extension** v1.3.0
-5. **agentgateway** (llm-d's custom Gateway API implementation)
-6. **llm-d-modelservice Helm chart** v0.4.8+
-7. **HuggingFace account** with access token (for model downloads)
+1. **OpenShift 4.14+** with GPU Operator
+2. **Gateway API CRDs** v1.2.0+
+3. **Gateway API Inference Extension** v1.3.0
+4. **agentgateway** (llm-d's custom Gateway API implementation)
+5. **llm-d-modelservice Helm chart** v0.4.8+
+6. **HuggingFace account** with access token (for model downloads)
 
 ### Install Gateway API Components
 
@@ -117,60 +118,7 @@ oc create secret generic llm-d-hf-token \
   --namespace ${NAMESPACE}
 ```
 
-### Step 2: Create PersistentVolumeClaims
-
-Create PVCs for model storage (RWO volumes):
-
-```bash
-oc apply -f manifests/qwen35-35b-a3b/pvc.yaml
-oc apply -f manifests/qwen35-27b-distilled/pvc.yaml
-oc apply -f manifests/qwen3-next-80b/pvc.yaml
-oc apply -f manifests/qwen35-9b/pvc.yaml
-```
-
-Verify:
-
-```bash
-oc get pvc -n ${NAMESPACE}
-```
-
-### Step 3: Download Models to PVCs
-
-Launch download pods to populate PVCs with models from HuggingFace:
-
-```bash
-oc apply -f manifests/qwen35-35b-a3b/download.yaml
-oc apply -f manifests/qwen35-27b-distilled/download.yaml
-oc apply -f manifests/qwen3-next-80b/download.yaml
-oc apply -f manifests/qwen35-9b/download.yaml
-```
-
-Wait for all downloads to complete (can take 30-120 minutes depending on network):
-
-```bash
-oc wait --for=condition=Ready \
-  pod/download-qwen35-35b-a3b \
-  pod/download-qwen35-27b-distilled \
-  pod/download-qwen3-next-80b \
-  pod/download-qwen35-9b \
-  -n ${NAMESPACE} \
-  --timeout=7200s
-```
-
-Monitor download progress:
-
-```bash
-# Check logs for any download pod
-oc logs -f download-qwen3-next-80b -n ${NAMESPACE}
-```
-
-**Important**: Delete download pods after completion to release RWO PVCs:
-
-```bash
-oc delete pod download-qwen35-35b-a3b download-qwen35-27b-distilled download-qwen3-next-80b download-qwen35-9b -n ${NAMESPACE}
-```
-
-### Step 4: Deploy Gateway Infrastructure
+### Step 2: Deploy Shared Gateway Infrastructure
 
 ```bash
 # Deploy agentgateway Gateway
@@ -178,137 +126,47 @@ oc apply -f manifests/shared/gateway.yaml
 
 # Apply SCC binding for non-root vLLM containers
 oc apply -f manifests/shared/scc-binding.yaml
-```
 
-Wait for agentgateway data plane to be running:
-
-```bash
+# Wait for agentgateway data plane
 oc rollout status deployment -n agentgateway-system
-```
 
-> **Why wait?** The `AgentgatewayPolicy` CRD is registered only after agentgateway control plane is fully initialized.
-
-Apply body-based routing policy:
-
-```bash
+# Apply body-based routing policy
 oc apply -f manifests/shared/agentgateway-policy.yaml
-```
 
-### Step 5: Deploy InferencePools
-
-InferencePools create the connection between Gateway HTTPRoutes and model server pods via label selectors.
-
-```bash
-# Add llm-d-modelservice Helm repository
-helm repo add llm-d-modelservice https://llm-d-incubation.github.io/llm-d-modelservice/
-helm repo update
-
-# Deploy InferencePool for Qwen3.5-35B-A3B
-helm upgrade --install ${MODEL_SERVER}-qwen35-35b-a3b \
-  --dependency-update \
-  --set inferencePool.modelServers.matchLabels.app=${MODEL_SERVER}-qwen35-35b-a3b \
-  --set provider.name=none \
-  --set inferencePool.modelServerType=${MODEL_SERVER} \
-  --set experimentalHttpRoute.enabled=true \
-  --set experimentalHttpRoute.baseModel="Qwen/Qwen3.5-35B-A3B" \
-  --version ${IGW_CHART_VERSION} \
-  --namespace ${NAMESPACE} \
-  oci://us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/charts/inferencepool
-
-# Deploy InferencePool for Qwen3.5-27B-distilled
-helm upgrade --install ${MODEL_SERVER}-qwen35-27b-distilled \
-  --dependency-update \
-  --set inferencePool.modelServers.matchLabels.app=${MODEL_SERVER}-qwen35-27b-distilled \
-  --set provider.name=none \
-  --set inferencePool.modelServerType=${MODEL_SERVER} \
-  --set experimentalHttpRoute.enabled=true \
-  --set experimentalHttpRoute.baseModel="Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled" \
-  --version ${IGW_CHART_VERSION} \
-  --namespace ${NAMESPACE} \
-  oci://us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/charts/inferencepool
-
-# Deploy InferencePool for Qwen3-Next-80B
-helm upgrade --install ${MODEL_SERVER}-qwen3-next-80b \
-  --dependency-update \
-  --set inferencePool.modelServers.matchLabels.app=${MODEL_SERVER}-qwen3-next-80b \
-  --set provider.name=none \
-  --set inferencePool.modelServerType=${MODEL_SERVER} \
-  --set experimentalHttpRoute.enabled=true \
-  --set experimentalHttpRoute.baseModel="Qwen/Qwen3-Next-80B-A3B-Thinking" \
-  --version ${IGW_CHART_VERSION} \
-  --namespace ${NAMESPACE} \
-  oci://us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/charts/inferencepool
-
-# Deploy InferencePool for Qwen3.5-9B
-helm upgrade --install ${MODEL_SERVER}-qwen35-9b \
-  --dependency-update \
-  --set inferencePool.modelServers.matchLabels.app=${MODEL_SERVER}-qwen35-9b \
-  --set provider.name=none \
-  --set inferencePool.modelServerType=${MODEL_SERVER} \
-  --set experimentalHttpRoute.enabled=true \
-  --set experimentalHttpRoute.baseModel="Qwen/Qwen3.5-9B" \
-  --version ${IGW_CHART_VERSION} \
-  --namespace ${NAMESPACE} \
-  oci://us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/charts/inferencepool
-```
-
-### Step 6: Deploy Model Servers (vLLM)
-
-Deploy llm-d-modelservice instances for each model:
-
-```bash
-helm upgrade --install ms-qwen35-35b-a3b llm-d-modelservice/llm-d-modelservice \
-  --namespace ${NAMESPACE} \
-  -f manifests/qwen35-35b-a3b/values.yaml
-
-helm upgrade --install ms-qwen35-27b-distilled llm-d-modelservice/llm-d-modelservice \
-  --namespace ${NAMESPACE} \
-  -f manifests/qwen35-27b-distilled/values.yaml
-
-helm upgrade --install ms-qwen3-next-80b llm-d-modelservice/llm-d-modelservice \
-  --namespace ${NAMESPACE} \
-  -f manifests/qwen3-next-80b/values.yaml
-
-helm upgrade --install ms-qwen35-9b llm-d-modelservice/llm-d-modelservice \
-  --namespace ${NAMESPACE} \
-  -f manifests/qwen35-9b/values.yaml
-```
-
-Wait for all decode pods to become ready:
-
-```bash
-oc get pods -n ${NAMESPACE} -l llm-d.ai/role=decode -w
-```
-
-### Step 7: Patch HTTPRoutes
-
-HTTPRoutes need to reference the Gateway namespace explicitly:
-
-```bash
-oc patch httproute ${MODEL_SERVER}-qwen35-35b-a3b -n ${NAMESPACE} --type='json' \
-  -p='[{"op":"add","path":"/spec/parentRefs/0/namespace","value":"agentgateway-system"}]'
-
-oc patch httproute ${MODEL_SERVER}-qwen35-27b-distilled -n ${NAMESPACE} --type='json' \
-  -p='[{"op":"add","path":"/spec/parentRefs/0/namespace","value":"agentgateway-system"}]'
-
-oc patch httproute ${MODEL_SERVER}-qwen3-next-80b -n ${NAMESPACE} --type='json' \
-  -p='[{"op":"add","path":"/spec/parentRefs/0/namespace","value":"agentgateway-system"}]'
-
-oc patch httproute ${MODEL_SERVER}-qwen35-9b -n ${NAMESPACE} --type='json' \
-  -p='[{"op":"add","path":"/spec/parentRefs/0/namespace","value":"agentgateway-system"}]'
-```
-
-### Step 8: Expose Gateway via OpenShift Route
-
-```bash
+# Expose Gateway via OpenShift Route
 oc apply -f manifests/shared/route.yaml
+
+# Get Gateway URL
+export GATEWAY_URL=$(oc get route inference-gateway -n agentgateway-system -o jsonpath='{.spec.host}')
+echo "Gateway URL: https://${GATEWAY_URL}"
 ```
 
-Get the external URL:
+### Step 3: Deploy Models
+
+For each model you want to deploy, navigate to its folder and follow the deployment instructions in its README.md:
+
+**Generic deployment pattern for all models:**
+
+1. **Create PVC**: `oc apply -f pvc.yaml`
+2. **Download model**: `oc apply -f download.yaml` → wait → delete download pod
+3. **Deploy InferencePool**: Helm install with model-specific `baseModel` parameter
+4. **Deploy model server**: `helm install -f values.yaml`
+5. **Patch HTTPRoute**: Add Gateway namespace reference
+6. **Update AgentgatewayPolicy**: Add model to routing map (if not already present)
+7. **Test**: Use model-specific test commands
+
+See individual model READMEs for exact commands, storage sizes, and configuration details.
+
+### Step 4: Scale Management
+
+To free GPU resources when models are not in use:
 
 ```bash
-GATEWAY_URL=$(oc get route inference-gateway -n agentgateway-system -o jsonpath='{.spec.host}')
-echo "Gateway URL: https://${GATEWAY_URL}"
+# Stop all models
+oc scale deployment -l helm.sh/chart=llm-d-modelservice-v0.4.9 --replicas=0 -n ${NAMESPACE}
+
+# Start all models
+oc scale deployment -l helm.sh/chart=llm-d-modelservice-v0.4.9 --replicas=1 -n ${NAMESPACE}
 ```
 
 ## Verification
@@ -326,114 +184,38 @@ oc get inferencepool,httproute -n ${NAMESPACE}
 oc get pods -n ${NAMESPACE} -l llm-d.ai/role=decode -o wide
 ```
 
-Expected output:
-
-```text
-NAME                                                    READY   STATUS
-ms-qwen35-35b-a3b-llm-d-modelservice-decode-xxx         1/1     Running
-ms-qwen35-27b-distilled-llm-d-modelservice-decode-xxx   1/1     Running
-ms-qwen3-next-80b-llm-d-modelservice-decode-xxx         1/1     Running
-ms-qwen35-9b-llm-d-modelservice-decode-xxx              1/1     Running
-```
-
 ### List Deployed Models
 
-**Note**: `GET /v1/models` returns 404 through the gateway because the AgentgatewayPolicy CEL expression requires a JSON body with a `model` field for routing, which GET requests don't have.
+**Note**: `GET /v1/models` returns 404 through the gateway because the AgentgatewayPolicy CEL expression requires a JSON body with a `model` field for routing.
 
-Use the cluster API instead:
+Query model servers directly:
 
 ```bash
-# List InferencePools (one per model)
-oc get inferencepool -n llm-d
+# List InferencePools
+oc get inferencepool -n ${NAMESPACE}
 
-# Query all model servers directly
-for app in vllm-qwen35-35b-a3b vllm-qwen35-27b-distilled vllm-qwen3-next-80b vllm-qwen35-9b; do
-  echo "=== ${app} ==="
-  oc get pods -n llm-d -l app=${app} -o name | head -1 | \
-    xargs -I{} oc exec {} -n llm-d -c vllm -- curl -s http://localhost:8200/v1/models | jq -r '.data[].id'
-done
+# Query specific model server
+oc get pods -n ${NAMESPACE} -l app=vllm-gemma-4-31b -o name | head -1 | \
+  xargs -I{} oc exec {} -c vllm -- curl -s http://localhost:8200/v1/models | jq -r '.data[].id'
 ```
 
 ### Test Inference
 
-Test each model through the gateway:
-
 ```bash
-# Qwen3.5-35B-A3B
-curl -s -X POST https://${GATEWAY_URL}/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "Qwen/Qwen3.5-35B-A3B",
-    "messages": [{"role": "user", "content": "Hello"}],
-    "max_tokens": 100
-  }' | jq .
+# Set Gateway URL
+export GATEWAY_URL=$(oc get route inference-gateway -n agentgateway-system -o jsonpath='{.spec.host}')
 
-# Qwen3.5-27B distilled
+# Test any deployed model (example: Gemma 4 31B)
 curl -s -X POST https://${GATEWAY_URL}/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled",
-    "messages": [{"role": "user", "content": "Hello"}],
-    "max_tokens": 100
-  }' | jq .
-
-# Qwen3-Next-80B FP8
-curl -s -X POST https://${GATEWAY_URL}/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "Qwen/Qwen3-Next-80B-A3B-Thinking",
-    "messages": [{"role": "user", "content": "Hello"}],
-    "max_tokens": 100
-  }' | jq .
-
-# Qwen3.5-9B
-curl -s -X POST https://${GATEWAY_URL}/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "Qwen/Qwen3.5-9B",
+    "model": "google/gemma-4-31b-it",
     "messages": [{"role": "user", "content": "Hello"}],
     "max_tokens": 100
   }' | jq .
 ```
 
-## Embedding Model (TEI)
-
-### Deploy Text Embeddings Inference
-
-The `sentence-transformers/all-mpnet-base-v2` model is **not deployable via vLLM** (MPNetModel architecture is unsupported). It runs on HuggingFace TEI as a standalone CPU deployment.
-
-```bash
-# Create PVC for model persistence
-oc apply -f manifests/all-mpnet-base-v2/pvc.yaml
-
-# Deploy TEI embedding service
-oc apply -f manifests/all-mpnet-base-v2/deployment.yaml
-
-# Wait for rollout
-oc rollout status deployment/tei-all-mpnet-base-v2 -n ${NAMESPACE}
-
-# Expose externally
-oc apply -f manifests/all-mpnet-base-v2/route.yaml
-```
-
-### Test Embeddings
-
-```bash
-TEI_URL=$(oc get route tei-all-mpnet-base-v2 -n ${NAMESPACE} -o jsonpath='{.spec.host}')
-
-# OpenAI-compatible endpoint
-curl -s -X POST https://${TEI_URL}/v1/embeddings \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "sentence-transformers/all-mpnet-base-v2",
-    "input": "Hello world"
-  }' | jq .
-
-# TEI-native endpoint (returns float arrays directly)
-curl -s -X POST https://${TEI_URL}/embed \
-  -H "Content-Type: application/json" \
-  -d '{"inputs": "Hello world"}' | jq .
-```
+**For model-specific test commands**, see the model's README.md in `manifests/<model-name>/`.
 
 ## Troubleshooting
 
@@ -464,7 +246,7 @@ curl -s -X POST https://${TEI_URL}/embed \
 **Fix**: Delete download pods after model downloads complete:
 
 ```bash
-oc delete pod download-qwen3-next-80b -n ${NAMESPACE}
+oc delete pod download-<model-name> -n ${NAMESPACE}
 ```
 
 #### 4. HTTPRoute not routing traffic
@@ -473,10 +255,10 @@ oc delete pod download-qwen3-next-80b -n ${NAMESPACE}
 
 **Cause**: HTTPRoute missing `parentRefs[0].namespace` field.
 
-**Fix**: Apply the patch from Step 7:
+**Fix**: Apply the HTTPRoute patch:
 
 ```bash
-oc patch httproute vllm-qwen3-next-80b -n ${NAMESPACE} --type='json' \
+oc patch httproute vllm-<model-name> -n ${NAMESPACE} --type='json' \
   -p='[{"op":"add","path":"/spec/parentRefs/0/namespace","value":"agentgateway-system"}]'
 ```
 
@@ -484,43 +266,46 @@ oc patch httproute vllm-qwen3-next-80b -n ${NAMESPACE} --type='json' \
 
 ```bash
 # Check vLLM logs
-oc logs -f deployment/ms-qwen3-next-80b-llm-d-modelservice-decode -c vllm -n ${NAMESPACE}
+oc logs -f deployment/ms-<model-name>-llm-d-modelservice-decode -c vllm -n ${NAMESPACE}
 
 # Check Gateway routing
-oc describe httproute vllm-qwen3-next-80b -n ${NAMESPACE}
+oc describe httproute vllm-<model-name> -n ${NAMESPACE}
 
 # Check InferencePool status
-oc describe inferencepool vllm-qwen3-next-80b -n ${NAMESPACE}
+oc describe inferencepool vllm-<model-name> -n ${NAMESPACE}
 
 # Test direct pod access (bypass gateway)
-POD=$(oc get pods -n ${NAMESPACE} -l app=vllm-qwen3-next-80b -o name | head -1)
-oc exec ${POD} -n ${NAMESPACE} -c vllm -- curl -s http://localhost:8200/v1/models | jq .
+POD=$(oc get pods -n ${NAMESPACE} -l app=vllm-<model-name> -o name | head -1)
+oc exec ${POD} -c vllm -- curl -s http://localhost:8200/v1/models | jq .
+
+# Check AgentgatewayPolicy includes the model
+oc get agentgatewaypolicy bbr -n agentgateway-system -o jsonpath='{.spec.traffic.transformation.request.set[0].value}'
 ```
 
 ## Configuration Details
 
 ### Model Server Configuration
 
-All model servers use these vLLM arguments:
+Common vLLM arguments across models:
 
 - `--enable-auto-tool-choice` - Auto-detect tool calling
-- `--tool-call-parser hermes` - Use Hermes tool format
+- `--tool-call-parser` - Tool format parser (varies by model family)
 - `--disable-access-log-for-endpoints /health,/metrics,/ping` - Reduce log noise
-- `--trust-remote-code` - Allow custom model code (required for some models)
-- `--max-model-len 32768` - Set 32K context window (where applicable)
+- `--trust-remote-code` - Allow custom model code
+- `HOME=/tmp` environment variable for non-root compatibility
 
-### Resource Allocation
+### Tool Calling Support
 
-Each decode pod requests:
+- **Qwen models**: `--tool-call-parser hermes`
+- **Gemma 4 models**: `--tool-call-parser gemma4`
 
-- **1x NVIDIA GPU** (`nvidia.com/gpu: 1`)
-- **HOME=/tmp** environment variable for non-root compatibility
+See model-specific READMEs for tool calling test examples.
 
 ### Chart Versions
 
-- **llm-d-modelservice**: v0.4.8
+- **llm-d-modelservice**: v0.4.8+
 - **Gateway API Inference Extension**: v1.3.0
-- **vLLM image**: v0.17.0 (minimum for Qwen3.5 support)
+- **vLLM images**: Model-specific (see individual README.md files)
 
 ## Cleanup
 
@@ -528,28 +313,21 @@ Each decode pod requests:
 
 ```bash
 export NAMESPACE=llm-d
-export MODEL_SERVER=vllm
 
-# Delete model servers
-helm uninstall ms-qwen35-35b-a3b -n ${NAMESPACE}
-helm uninstall ms-qwen35-27b-distilled -n ${NAMESPACE}
-helm uninstall ms-qwen3-next-80b -n ${NAMESPACE}
-helm uninstall ms-qwen35-9b -n ${NAMESPACE}
+# Delete all model servers
+helm uninstall $(helm list -n ${NAMESPACE} -q | grep ^ms-) -n ${NAMESPACE}
 
-# Delete InferencePools
-helm uninstall ${MODEL_SERVER}-qwen35-35b-a3b -n ${NAMESPACE}
-helm uninstall ${MODEL_SERVER}-qwen35-27b-distilled -n ${NAMESPACE}
-helm uninstall ${MODEL_SERVER}-qwen3-next-80b -n ${NAMESPACE}
-helm uninstall ${MODEL_SERVER}-qwen35-9b -n ${NAMESPACE}
+# Delete all InferencePools
+helm uninstall $(helm list -n ${NAMESPACE} -q | grep ^vllm-) -n ${NAMESPACE}
 
-# Delete embedding service
-oc delete -f manifests/all-mpnet-base-v2/
+# Delete embedding service (if deployed)
+oc delete -f manifests/all-mpnet-base-v2/ 2>/dev/null || true
 
 # Delete Gateway resources
 oc delete -f manifests/shared/
 
 # Delete PVCs (WARNING: deletes downloaded models)
-oc delete pvc qwen35-35b-a3b-pvc qwen35-27b-distilled-pvc qwen3-next-80b-pvc qwen35-9b-pvc all-mpnet-base-v2-pvc -n ${NAMESPACE}
+oc delete pvc -l app.kubernetes.io/managed-by=Helm -n ${NAMESPACE}
 
 # Delete namespace
 oc delete namespace ${NAMESPACE}
@@ -561,10 +339,16 @@ To keep downloaded models but remove running services:
 
 ```bash
 # Stop model servers only
-helm uninstall ms-qwen35-35b-a3b ms-qwen35-27b-distilled ms-qwen3-next-80b ms-qwen35-9b -n ${NAMESPACE}
+helm uninstall $(helm list -n ${NAMESPACE} -q | grep ^ms-) -n ${NAMESPACE}
 
 # PVCs remain - next deployment will skip downloads
 ```
+
+## Embedding Model (TEI)
+
+The `sentence-transformers/all-mpnet-base-v2` model runs on HuggingFace TEI as a standalone CPU deployment (vLLM does not support MPNetModel architecture).
+
+See [manifests/all-mpnet-base-v2/README.md](manifests/all-mpnet-base-v2/) for deployment and testing instructions.
 
 ## References
 
@@ -572,7 +356,10 @@ helm uninstall ms-qwen35-35b-a3b ms-qwen35-27b-distilled ms-qwen3-next-80b ms-qw
 - [llm-d-modelservice Chart](https://llm-d-incubation.github.io/llm-d-modelservice/)
 - [Gateway API Inference Extension](https://github.com/kubernetes-sigs/gateway-api-inference-extension)
 - [vLLM Documentation](https://docs.vllm.ai/)
+- [vLLM Model Recipes](https://docs.vllm.ai/projects/recipes/en/latest/index.html)
+- [vLLM Tool Calling Guide](https://docs.vllm.ai/en/latest/features/tool_calling/)
 - [Qwen Models on HuggingFace](https://huggingface.co/Qwen)
+- [Gemma 4 Models on HuggingFace](https://huggingface.co/google)
 
 ## License
 
