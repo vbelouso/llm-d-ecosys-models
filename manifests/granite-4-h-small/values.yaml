@@ -1,0 +1,33 @@
+modelArtifacts:
+  uri: "pvc://granite-4-h-small-pvc/hub/ibm-granite/granite-4.0-h-small"
+  name: "ibm-granite/granite-4.0-h-small"
+  size: 70Gi
+  authSecretName: "llm-d-hf-token"
+  labels:
+    app: "vllm-granite-4-h-small" # Must match inferencePool.modelServers.matchLabels.app
+
+routing:
+  servicePort: 8000
+
+accelerator:
+  type: nvidia
+
+decode:
+  containers:
+    - name: "vllm"
+      image: "vllm/vllm-openai:v0.19.0"
+      modelCommand: vllmServe
+      args:
+        - "--enable-auto-tool-choice"
+        - "--tool-call-parser"
+        - "granite4"
+        - "--disable-access-log-for-endpoints"
+        - "/health,/metrics,/ping"
+        - "--trust-remote-code"
+      env:
+        - name: HOME
+          value: /tmp
+      mountModelVolume: true
+
+prefill:
+  create: false
