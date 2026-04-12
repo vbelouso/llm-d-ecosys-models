@@ -17,6 +17,7 @@ This repository contains manifests to deploy large language models and embedding
 
 - **[google/gemma-4-26b-a4b-it](manifests/gemma-4-26b-a4b/)** - [HuggingFace](https://huggingface.co/google/gemma-4-26b-a4b-it)
 - **[google/gemma-4-31b-it](manifests/gemma-4-31b/)** - [HuggingFace](https://huggingface.co/google/gemma-4-31b-it)
+- **[ibm-granite/granite-4.0-h-small](manifests/granite-4-h-small/)** - [HuggingFace](https://huggingface.co/ibm-granite/granite-4.0-h-small)
 - **[Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled](manifests/qwen35-27b-distilled/)** - [HuggingFace](https://huggingface.co/Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled)
 - **[Qwen/Qwen3.5-35B-A3B](manifests/qwen35-35b-a3b/)** - [HuggingFace](https://huggingface.co/Qwen/Qwen3.5-35B-A3B)
 - **[Qwen/Qwen3.5-9B](manifests/qwen35-9b/)** - [HuggingFace](https://huggingface.co/Qwen/Qwen3.5-9B)
@@ -24,36 +25,6 @@ This repository contains manifests to deploy large language models and embedding
 - **[sentence-transformers/all-mpnet-base-v2](manifests/all-mpnet-base-v2/)** - [HuggingFace](https://huggingface.co/sentence-transformers/all-mpnet-base-v2)
 
 Each model folder contains deployment manifests and model-specific README with deployment instructions.
-
-## Repository Structure
-
-```text
-manifests/
-├── qwen35-35b-a3b/
-│   ├── README.md            # Model-specific deployment guide
-│   ├── pvc.yaml
-│   ├── download.yaml
-│   └── values.yaml
-├── qwen35-27b-distilled/
-├── qwen3-next-80b/
-├── qwen35-9b/
-├── gemma-4-26b-a4b/
-│   ├── README.md            # Gemma 4 26B deployment guide
-│   ├── pvc.yaml
-│   ├── download.yaml
-│   └── values.yaml
-├── gemma-4-31b/
-│   ├── README.md            # Gemma 4 31B deployment guide
-│   ├── pvc.yaml
-│   ├── download.yaml
-│   └── values.yaml
-├── all-mpnet-base-v2/       # Embeddings model (TEI)
-└── shared/                  # Gateway and routing infrastructure
-    ├── gateway.yaml
-    ├── scc-binding.yaml
-    ├── route.yaml
-    └── agentgateway-policy.yaml
-```
 
 ## Architecture
 
@@ -298,6 +269,7 @@ Common vLLM arguments across models:
 
 - **Qwen models**: `--tool-call-parser hermes`
 - **Gemma 4 models**: `--tool-call-parser gemma4`
+- **Granite 4 models**: `--tool-call-parser granite4`
 
 See model-specific READMEs for tool calling test examples.
 
