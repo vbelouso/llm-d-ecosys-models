@@ -16,7 +16,7 @@ spec:
         - -c
         - >
           pip install --no-cache-dir huggingface_hub &&
-          python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='google/gemma-4-31b-it', local_dir='/models/hub/google/gemma-4-31b-it', token='$(HF_TOKEN)', local_dir_use_symlinks=False)"
+          python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='RedHatAI/gemma-4-31B-it-FP8-block', local_dir='/models/hub/RedHatAI/gemma-4-31B-it-FP8-block', token='$(HF_TOKEN)', local_dir_use_symlinks=False)"
       env:
         - name: HF_TOKEN
           valueFrom:

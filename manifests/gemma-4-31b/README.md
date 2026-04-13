@@ -1,6 +1,6 @@
-# google/gemma-4-31b-it
+# RedHatAI/gemma-4-31B-it-FP8-block
 
-**HuggingFace**: <https://huggingface.co/google/gemma-4-31b-it>
+**HuggingFace**: <https://huggingface.co/RedHatAI/gemma-4-31B-it-FP8-block>
 
 ## Deployment
 
@@ -57,7 +57,7 @@ helm upgrade --install ${MODEL_SERVER}-gemma-4-31b \
   --set provider.name=none \
   --set inferencePool.modelServerType=${MODEL_SERVER} \
   --set experimentalHttpRoute.enabled=true \
-  --set experimentalHttpRoute.baseModel="google/gemma-4-31b-it" \
+  --set experimentalHttpRoute.baseModel="RedHatAI/gemma-4-31B-it-FP8-block" \
   --version ${IGW_CHART_VERSION} \
   --namespace ${NAMESPACE} \
   oci://us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/charts/inferencepool
@@ -93,7 +93,7 @@ Add the model to the routing policy (if not already present):
 oc get agentgatewaypolicy bbr -n agentgateway-system -o yaml
 ```
 
-Ensure `"google/gemma-4-31b-it"` is in the model mapping.
+Ensure `"RedHatAI/gemma-4-31B-it-FP8-block"` is in the model mapping.
 
 ## Testing
 
@@ -123,7 +123,7 @@ Expected output:
 {
   "data": [
     {
-      "id": "google/gemma-4-31b-it",
+      "id": "RedHatAI/gemma-4-31B-it-FP8-block",
       "object": "model",
       ...
     }
@@ -145,7 +145,7 @@ Simple inference:
 curl -s -X POST https://${GATEWAY_URL}/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "google/gemma-4-31b-it",
+    "model": "RedHatAI/gemma-4-31B-it-FP8-block",
     "messages": [{"role": "user", "content": "Hello"}],
     "max_tokens": 100
   }' | jq .
@@ -157,7 +157,7 @@ curl -s -X POST https://${GATEWAY_URL}/v1/chat/completions \
 curl -s -X POST https://${GATEWAY_URL}/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "google/gemma-4-31b-it",
+    "model": "RedHatAI/gemma-4-31B-it-FP8-block",
     "messages": [{"role": "user", "content": "What is the weather in Paris?"}],
     "tools": [
       {
@@ -228,7 +228,7 @@ oc get httproute ${MODEL_SERVER}-gemma-4-31b -n ${NAMESPACE} -o yaml | grep -A5 
 Check AgentgatewayPolicy includes the model:
 
 ```bash
-oc get agentgatewaypolicy bbr -n agentgateway-system -o jsonpath='{.spec.traffic.transformation.request.set[0].value}' | grep gemma-4-31b
+oc get agentgatewaypolicy bbr -n agentgateway-system -o jsonpath='{.spec.traffic.transformation.request.set[0].value}' | grep gemma-4-31B-it-FP8-block
 ```
 
 ## Cleanup

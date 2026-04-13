@@ -16,8 +16,8 @@ spec:
         - name: X-Gateway-Base-Model-Name
           value: |
             {
-              "google/gemma-4-26b-a4b-it": "google/gemma-4-26b-a4b-it",
-              "google/gemma-4-31b-it": "google/gemma-4-31b-it",
+              "RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic": "RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic",
+              "RedHatAI/gemma-4-31B-it-FP8-block": "RedHatAI/gemma-4-31B-it-FP8-block",
               "ibm-granite/granite-4.0-h-small": "ibm-granite/granite-4.0-h-small",
               "Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled": "Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled",
               "Qwen/Qwen3.5-35B-A3B": "Qwen/Qwen3.5-35B-A3B",
