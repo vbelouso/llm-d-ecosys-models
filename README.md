@@ -15,8 +15,8 @@ This repository contains manifests to deploy large language models and embedding
 
 ### Deployed Models
 
-- **[google/gemma-4-26b-a4b-it](manifests/gemma-4-26b-a4b/)** - [HuggingFace](https://huggingface.co/google/gemma-4-26b-a4b-it)
-- **[google/gemma-4-31b-it](manifests/gemma-4-31b/)** - [HuggingFace](https://huggingface.co/google/gemma-4-31b-it)
+- **[RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic](manifests/gemma-4-26b-a4b/)** - [HuggingFace](https://huggingface.co/RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic)
+- **[RedHatAI/gemma-4-31B-it-FP8-block](manifests/gemma-4-31b/)** - [HuggingFace](https://huggingface.co/RedHatAI/gemma-4-31B-it-FP8-block)
 - **[ibm-granite/granite-4.0-h-small](manifests/granite-4-h-small/)** - [HuggingFace](https://huggingface.co/ibm-granite/granite-4.0-h-small)
 - **[Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled](manifests/qwen35-27b-distilled/)** - [HuggingFace](https://huggingface.co/Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled)
 - **[Qwen/Qwen3.5-35B-A3B](manifests/qwen35-35b-a3b/)** - [HuggingFace](https://huggingface.co/Qwen/Qwen3.5-35B-A3B)
@@ -180,7 +180,7 @@ export GATEWAY_URL=$(oc get route inference-gateway -n agentgateway-system -o js
 curl -s -X POST https://${GATEWAY_URL}/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "google/gemma-4-31b-it",
+    "model": "RedHatAI/gemma-4-31B-it-FP8-block",
     "messages": [{"role": "user", "content": "Hello"}],
     "max_tokens": 100
   }' | jq .
