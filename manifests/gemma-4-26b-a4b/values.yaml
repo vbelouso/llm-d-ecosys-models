@@ -27,7 +27,15 @@ decode:
       env:
         - name: HOME
           value: /tmp
+      volumeMounts:
+        - name: gemma4-patch
+          mountPath: /usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/gemma4.py
+          subPath: gemma4.py
       mountModelVolume: true
+  volumes:
+    - name: gemma4-patch
+      configMap:
+        name: gemma4-patched
 
 prefill:
   create: false

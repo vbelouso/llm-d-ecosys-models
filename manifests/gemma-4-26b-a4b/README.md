@@ -2,6 +2,10 @@
 
 **HuggingFace**: <https://huggingface.co/RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic>
 
+**vLLM Version**: gemma4 image with patched weight loader for RedHatAI's flattened MoE checkpoint structure
+
+**Note**: This model uses FP8-Dynamic quantization with a "flattened" checkpoint structure (missing `.moe.` prefix). A ConfigMap patches the vLLM weight loader to handle this format. See: <https://gist.github.com/lioreshai/07b2ccb2c69616504d01b25383dfe895>
+
 ## Deployment
 
 ### Prerequisites
@@ -12,7 +16,29 @@ export MODEL_SERVER=vllm
 export IGW_CHART_VERSION=v1.3.0
 ```
 
-### 1. Create PVC
+### 1. Apply vLLM Weight Loader Patch
+
+**This step is REQUIRED for RedHatAI FP8-Dynamic models.**
+
+Extract and patch gemma4.py from a running vLLM pod, then create ConfigMap:
+
+```bash
+# Extract gemma4.py from running vllm pod
+POD=$(oc get pods -n ${NAMESPACE} -l app=vllm-gemma-4-31b -o name | head -1)
+oc exec -n ${NAMESPACE} ${POD} -c vllm -- \
+  cat /usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/gemma4.py > /tmp/gemma4.py.orig
+
+# Apply RedHatAI flattened MoE patch (see https://gist.github.com/lioreshai/07b2ccb2c69616504d01b25383dfe895)
+# Patch adds .moe. prefix handling for RedHatAI's flattened checkpoint structure
+python3 manifests/gemma-4-26b-a4b/patch-gemma4.py /tmp/gemma4.py.orig /tmp/gemma4.py.patched
+
+# Create ConfigMap
+oc create configmap gemma4-patched --from-file=gemma4.py=/tmp/gemma4.py.patched -n ${NAMESPACE}
+```
+
+**Note**: The `values.yaml` mounts this ConfigMap over the original gemma4.py to apply the patch at runtime.
+
+### 2. Create PVC
 
 ```bash
 oc apply -f manifests/gemma-4-26b-a4b/pvc.yaml
@@ -24,7 +50,7 @@ Verify:
 oc get pvc gemma-4-26b-a4b-pvc -n ${NAMESPACE}
 ```
 
-### 2. Download Model
+### 3. Download Model
 
 ```bash
 oc apply -f manifests/gemma-4-26b-a4b/download.yaml
@@ -48,7 +74,7 @@ oc logs -f download-gemma-4-26b-a4b -n ${NAMESPACE}
 oc delete pod download-gemma-4-26b-a4b -n ${NAMESPACE}
 ```
 
-### 3. Deploy InferencePool
+### 4. Deploy InferencePool
 
 ```bash
 helm upgrade --install ${MODEL_SERVER}-gemma-4-26b-a4b \
@@ -63,7 +89,7 @@ helm upgrade --install ${MODEL_SERVER}-gemma-4-26b-a4b \
   oci://us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/charts/inferencepool
 ```
 
-### 4. Deploy Model Server
+### 5. Deploy Model Server
 
 ```bash
 helm upgrade --install ms-gemma-4-26b-a4b llm-d-modelservice/llm-d-modelservice \
@@ -71,7 +97,7 @@ helm upgrade --install ms-gemma-4-26b-a4b llm-d-modelservice/llm-d-modelservice 
   -n ${NAMESPACE}
 ```
 
-### 5. Patch HTTPRoute
+### 6. Patch HTTPRoute
 
 ```bash
 oc patch httproute ${MODEL_SERVER}-gemma-4-26b-a4b -n ${NAMESPACE} --type='json' \
@@ -85,7 +111,7 @@ oc get httproute ${MODEL_SERVER}-gemma-4-26b-a4b -n ${NAMESPACE} -o jsonpath='{.
 # Should output: agentgateway-system
 ```
 
-### 6. Update AgentgatewayPolicy
+### 7. Update AgentgatewayPolicy
 
 Add the model to the routing policy (if not already present):
 
