@@ -20,6 +20,7 @@ The deployment has four distinct layers that must be deployed in order:
 ## Environment Variables
 
 Always use these for consistency:
+
 ```bash
 export NAMESPACE=llm-d
 export MODEL_SERVER=vllm
@@ -30,12 +31,12 @@ export IGW_CHART_VERSION=v1.3.0
 
 **CRITICAL - READ FIRST**: Before creating manifests for ANY new model:
 
-1. **Check vLLM model support**: https://docs.vllm.ai/projects/recipes/en/latest/index.html
+1. **Check vLLM model support**: <https://docs.vllm.ai/projects/recipes/en/latest/index.html>
    - Find the model family recipe (e.g., Google/Gemma4.md, Qwen/Qwen.md)
    - Verify vLLM version requirements
    - Note any special configuration (quantization, context length, etc.)
 
-2. **Check tool calling support**: https://docs.vllm.ai/en/latest/features/tool_calling/
+2. **Check tool calling support**: <https://docs.vllm.ai/en/latest/features/tool_calling/>
    - Identify the correct `--tool-call-parser` for the model family
    - Check if the parser exists in your target vLLM version
    - Verify any additional tool calling arguments needed
@@ -51,6 +52,7 @@ mkdir -p manifests/model-name/{pvc.yaml,download.yaml,values.yaml}
 ### 2. Key Configuration Decisions
 
 **vLLM Version & Tool Parser** (see documentation links above):
+
 - Each model family may require a different vLLM version and Docker image
 - Tool parsers are version-specific - check vLLM recipes for model-specific tags
 - Gemma 4 NVFP4 models require nightly: vllm/vllm-openai:nightly (PR #39045)
@@ -60,17 +62,20 @@ mkdir -p manifests/model-name/{pvc.yaml,download.yaml,values.yaml}
 - **Use nightly for bleeding-edge quantizations** (FP4, NVFP4) merged but not released
 
 **PVC Size**:
+
 - MoE models: ~2-3x parameter count (e.g., 35B → 80Gi)
 - Dense models: ~2x parameter count (e.g., 27B → 60Gi)
 - Quantized (FP8/FP4): Adjust downward
 
 **Tool Call Parser** (in `values.yaml`):
+
 - Qwen models: `--tool-call-parser hermes` (image: vllm/vllm-openai:v0.17.0)
 - Gemma 4 models: `--tool-call-parser gemma4` (image: vllm/vllm-openai:gemma4)
 - Granite 4 models: `--tool-call-parser granite4` (image: vllm/vllm-openai:v0.19.0)
 - Check vLLM recipes for model-specific Docker images - each family may have dedicated tags
 
 **Common vLLM Args**:
+
 - `--enable-auto-tool-choice` - Enable tool calling
 - `--trust-remote-code` - Required for custom model code
 - `--disable-access-log-for-endpoints /health,/metrics,/ping` - Reduce noise
@@ -78,6 +83,7 @@ mkdir -p manifests/model-name/{pvc.yaml,download.yaml,values.yaml}
 
 **Label Matching**:
 The `app` label in `values.yaml` must match the InferencePool's `matchLabels.app`:
+
 ```yaml
 labels:
   app: "vllm-model-name"  # Used by InferencePool selector
@@ -168,6 +174,7 @@ curl -X POST https://${GATEWAY_URL}/v1/chat/completions \
 See `docs/hacks/scale-to-zero.md` for detailed commands.
 
 Quick reference:
+
 ```bash
 # Stop all models
 oc scale deployment -l helm.sh/chart=llm-d-modelservice-v0.4.9 --replicas=0 -n llm-d
@@ -196,6 +203,7 @@ done
 ### Why Prefill Disabled?
 
 `prefill.create: false` in all `values.yaml` files because:
+
 - Prefill/decode disaggregation requires 8+ GPUs with RDMA
 - Single-GPU deployments don't benefit from P/D splitting
 - Avoids llm-d-inference-sim (simulator) being used instead of vLLM
@@ -203,6 +211,7 @@ done
 ### Why Download Pods Must Be Deleted?
 
 PVCs use `ReadWriteOnce` (RWO) access mode:
+
 - Only one pod can mount at a time
 - Download pods must complete and be deleted before model servers can mount
 - PVC data persists after pod deletion
@@ -214,6 +223,7 @@ InferencePools create HTTPRoutes in the model namespace (`llm-d`), but the Gatew
 ### Why Body-Based Routing?
 
 OpenAI API includes model name in request body, not URL path:
+
 ```json
 {"model": "Qwen/Qwen3.5-9B", "messages": [...]}
 ```
@@ -222,7 +232,7 @@ AgentgatewayPolicy uses CEL expressions to route based on `model` field. This is
 
 ## Version Compatibility
 
-- **vLLM Docker Images**: 
+- **vLLM Docker Images**:
   - vllm/vllm-openai:v0.17.0 for Qwen models
   - vllm/vllm-openai:nightly for Gemma 4 NVFP4 models (includes PR #39045)
   - vllm/vllm-openai:gemma4 for official Google Gemma 4 (non-quantized)
