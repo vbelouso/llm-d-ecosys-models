@@ -16,6 +16,7 @@ spec:
         - name: X-Gateway-Base-Model-Name
           value: |
             {
+              "google/gemma-4-26B-A4B-it": "google/gemma-4-26B-A4B-it",
               "RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic": "RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic",
               "RedHatAI/gemma-4-31B-it-FP8-block": "RedHatAI/gemma-4-31B-it-FP8-block",
               "ibm-granite/granite-4.0-h-small": "ibm-granite/granite-4.0-h-small",
