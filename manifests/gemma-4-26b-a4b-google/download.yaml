@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: download-gemma-4-26b-a4b-google
+  namespace: llm-d
+spec:
+  volumes:
+    - name: model-storage
+      persistentVolumeClaim:
+        claimName: gemma-4-26b-a4b-google-pvc
+  initContainers:
+    - name: download-model
+      image: registry.access.redhat.com/ubi9/python-312:9.7
+      command:
+        - /bin/bash
+        - -c
+        - >
+          pip install --no-cache-dir huggingface_hub &&
+          python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='google/gemma-4-26B-A4B-it', local_dir='/models/hub/google/gemma-4-26B-A4B-it', token='$(HF_TOKEN)', local_dir_use_symlinks=False)"
+      env:
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: llm-d-hf-token
+              key: HF_TOKEN
+      volumeMounts:
+        - name: model-storage
+          mountPath: /models
+  containers:
+    - name: pause
+      image: gcr.io/google_containers/pause
+  restartPolicy: Never

@@ -15,6 +15,7 @@ This repository contains manifests to deploy large language models and embedding
 
 ### Deployed Models
 
+- **[google/gemma-4-26B-A4B-it](manifests/gemma-4-26b-a4b-google/)** - [HuggingFace](https://huggingface.co/google/gemma-4-26B-A4B-it)
 - **[RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic](manifests/gemma-4-26b-a4b/)** - [HuggingFace](https://huggingface.co/RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic)
 - **[RedHatAI/gemma-4-31B-it-FP8-block](manifests/gemma-4-31b/)** - [HuggingFace](https://huggingface.co/RedHatAI/gemma-4-31B-it-FP8-block)
 - **[ibm-granite/granite-4.0-h-small](manifests/granite-4-h-small/)** - [HuggingFace](https://huggingface.co/ibm-granite/granite-4.0-h-small)
