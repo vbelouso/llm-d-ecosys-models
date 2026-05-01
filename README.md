@@ -15,15 +15,19 @@ This repository contains manifests to deploy large language models and embedding
 
 ### Deployed Models
 
-- **[google/gemma-4-26B-A4B-it](manifests/gemma-4-26b-a4b-google/)** - [HuggingFace](https://huggingface.co/google/gemma-4-26B-A4B-it)
-- **[RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic](manifests/gemma-4-26b-a4b/)** - [HuggingFace](https://huggingface.co/RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic)
-- **[RedHatAI/gemma-4-31B-it-FP8-block](manifests/gemma-4-31b/)** - [HuggingFace](https://huggingface.co/RedHatAI/gemma-4-31B-it-FP8-block)
-- **[ibm-granite/granite-4.0-h-small](manifests/granite-4-h-small/)** - [HuggingFace](https://huggingface.co/ibm-granite/granite-4.0-h-small)
-- **[Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled](manifests/qwen35-27b-distilled/)** - [HuggingFace](https://huggingface.co/Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled)
-- **[Qwen/Qwen3.5-35B-A3B](manifests/qwen35-35b-a3b/)** - [HuggingFace](https://huggingface.co/Qwen/Qwen3.5-35B-A3B)
-- **[Qwen/Qwen3.5-9B](manifests/qwen35-9b/)** - [HuggingFace](https://huggingface.co/Qwen/Qwen3.5-9B)
-- **[Qwen/Qwen3-Next-80B-A3B-Thinking](manifests/qwen3-next-80b/)** - [HuggingFace](https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Thinking)
-- **[sentence-transformers/all-mpnet-base-v2](manifests/all-mpnet-base-v2/)** - [HuggingFace](https://huggingface.co/sentence-transformers/all-mpnet-base-v2)
+| Model | Family | Params | Quant | Tool Parser | Manifests |
+|-------|--------|--------|-------|-------------|-----------|
+| [google/gemma-4-26B-A4B-it](https://huggingface.co/google/gemma-4-26B-A4B-it) | Gemma 4 | 26B (A4B) | FP16 | gemma4 | [manifests](manifests/gemma-4-26b-a4b-google/) |
+| [RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic](https://huggingface.co/RedHatAI/gemma-4-26B-A4B-it-FP8-Dynamic) | Gemma 4 | 26B (A4B) | FP8 | gemma4 | [manifests](manifests/gemma-4-26b-a4b/) |
+| [RedHatAI/gemma-4-31B-it-FP8-block](https://huggingface.co/RedHatAI/gemma-4-31B-it-FP8-block) | Gemma 4 | 31B | FP8 | gemma4 | [manifests](manifests/gemma-4-31b/) |
+| [ibm-granite/granite-4.0-h-small](https://huggingface.co/ibm-granite/granite-4.0-h-small) | Granite 4.0 | 32B (9B active) | FP16 | granite4 | [manifests](manifests/granite-4-h-small/) |
+| [ibm-granite/granite-4.1-30b-fp8](https://huggingface.co/ibm-granite/granite-4.1-30b-fp8) | Granite 4.1 | 30B | FP8 | granite4 | [manifests](manifests/granite-41-30b-fp8/) |
+| [ibm-granite/granite-4.1-8b-fp8](https://huggingface.co/ibm-granite/granite-4.1-8b-fp8) | Granite 4.1 | 8B | FP8 | granite4 | [manifests](manifests/granite-41-8b-fp8/) |
+| [Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled](https://huggingface.co/Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled) | Qwen 3.5 | 27B | FP16 | hermes | [manifests](manifests/qwen35-27b-distilled/) |
+| [Qwen/Qwen3.5-35B-A3B](https://huggingface.co/Qwen/Qwen3.5-35B-A3B) | Qwen 3.5 | 35B (A3B) | FP16 | hermes | [manifests](manifests/qwen35-35b-a3b/) |
+| [Qwen/Qwen3.5-9B](https://huggingface.co/Qwen/Qwen3.5-9B) | Qwen 3.5 | 9B | FP16 | hermes | [manifests](manifests/qwen35-9b/) |
+| [Qwen/Qwen3-Next-80B-A3B-Thinking](https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Thinking) | Qwen 3 | 80B (A3B) | FP8 | hermes | [manifests](manifests/qwen3-next-80b/) |
+| [sentence-transformers/all-mpnet-base-v2](https://huggingface.co/sentence-transformers/all-mpnet-base-v2) | MPNet | 110M | FP32 | — | [manifests](manifests/all-mpnet-base-v2/) |
 
 Each model folder contains deployment manifests and model-specific README with deployment instructions.
 
