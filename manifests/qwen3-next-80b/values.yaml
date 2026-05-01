@@ -25,7 +25,7 @@ decode:
         - "/health,/metrics,/ping"
         - "--trust-remote-code"
         - "--max-model-len"
-        - "32768"
+        - "65536"
       env:
         - name: HOME
           value: /tmp
