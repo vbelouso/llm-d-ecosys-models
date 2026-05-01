@@ -164,15 +164,11 @@ oc get pods -n ${NAMESPACE} -l llm-d.ai/role=decode -o wide
 
 **Note**: `GET /v1/models` returns 404 through the gateway because the AgentgatewayPolicy CEL expression requires a JSON body with a `model` field for routing.
 
-Query model servers directly:
+List all routable models via HTTPRoutes:
 
 ```bash
-# List InferencePools
-oc get inferencepool -n ${NAMESPACE}
-
-# Query specific model server
-oc get pods -n ${NAMESPACE} -l app=vllm-gemma-4-31b -o name | head -1 | \
-  xargs -I{} oc exec {} -c vllm -- curl -s http://localhost:8200/v1/models | jq -r '.data[].id'
+oc get httproute -n ${NAMESPACE} \
+  -o custom-columns='POOL:.metadata.name,MODEL:.spec.rules[0].matches[0].headers[0].value'
 ```
 
 ### Test Inference
