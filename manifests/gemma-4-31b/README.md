@@ -67,6 +67,7 @@ helm upgrade --install ${MODEL_SERVER}-gemma-4-31b \
 
 ```bash
 helm upgrade --install ms-gemma-4-31b llm-d-modelservice/llm-d-modelservice \
+  --version v0.4.15 \
   -f manifests/gemma-4-31b/values.yaml \
   -n ${NAMESPACE}
 ```
@@ -114,7 +115,7 @@ ms-gemma-4-31b-llm-d-modelservice-decode-xxxxx-xxxxx   1/1     Running   0      
 
 ```bash
 POD=$(oc get pods -n ${NAMESPACE} -l app=${MODEL_SERVER}-gemma-4-31b -o name | head -1)
-oc exec ${POD} -c vllm -- curl -s http://localhost:8200/v1/models | jq .
+oc exec ${POD} -c vllm -- curl -s http://localhost:8000/v1/models | jq .
 ```
 
 Expected output:

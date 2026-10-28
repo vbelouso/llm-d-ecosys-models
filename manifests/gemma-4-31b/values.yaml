@@ -2,17 +2,26 @@ modelArtifacts:
   uri: "pvc://gemma-4-31b-pvc/hub/RedHatAI/gemma-4-31B-it-FP8-block"
   name: "RedHatAI/gemma-4-31B-it-FP8-block"
   size: 45Gi
+  readOnly: false
   authSecretName: "llm-d-hf-token"
   labels:
     app: "vllm-gemma-4-31b" # Must match inferencePool.modelServers.matchLabels.app
 
 routing:
   servicePort: 8000
+  proxy:
+    enabled: false
 
 accelerator:
   type: nvidia
 
 decode:
+  replicas: 1
+  strategy:
+    type: Recreate
+  extraConfig:
+    securityContext:
+      fsGroupChangePolicy: OnRootMismatch
   containers:
     - name: "vllm"
       image: "vllm/vllm-openai:gemma4"
@@ -27,7 +36,16 @@ decode:
       env:
         - name: HOME
           value: /tmp
+        - name: HF_HOME
+          value: /tmp/huggingface
       mountModelVolume: true
+      extraConfig:
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          periodSeconds: 10
+          timeoutSeconds: 5
 
 prefill:
   create: false

@@ -2,17 +2,26 @@ modelArtifacts:
   uri: "pvc://granite-41-30b-fp8-pvc/hub/ibm-granite/granite-4.1-30b-fp8"
   name: "ibm-granite/granite-4.1-30b-fp8"
   size: 60Gi
+  readOnly: false
   authSecretName: "llm-d-hf-token"
   labels:
     app: "vllm-granite-41-30b-fp8"
 
 routing:
   servicePort: 8000
+  proxy:
+    enabled: false
 
 accelerator:
   type: nvidia
 
 decode:
+  replicas: 1
+  strategy:
+    type: Recreate
+  extraConfig:
+    securityContext:
+      fsGroupChangePolicy: OnRootMismatch
   containers:
     - name: "vllm"
       image: "vllm/vllm-openai:v0.19.0"
@@ -27,7 +36,16 @@ decode:
       env:
         - name: HOME
           value: /tmp
+        - name: HF_HOME
+          value: /tmp/huggingface
       mountModelVolume: true
+      extraConfig:
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          periodSeconds: 10
+          timeoutSeconds: 5
 
 prefill:
   create: false

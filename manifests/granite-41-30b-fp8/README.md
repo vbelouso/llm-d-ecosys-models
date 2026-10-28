@@ -73,6 +73,7 @@ helm upgrade --install ${MODEL_SERVER}-granite-41-30b-fp8 \
 
 ```bash
 helm upgrade --install ms-granite-41-30b-fp8 llm-d-modelservice/llm-d-modelservice \
+  --version v0.4.15 \
   -f manifests/granite-41-30b-fp8/values.yaml \
   -n ${NAMESPACE}
 ```
@@ -119,7 +120,7 @@ oc get pods -n ${NAMESPACE} -l app=${MODEL_SERVER}-granite-41-30b-fp8
 
 ```bash
 POD=$(oc get pods -n ${NAMESPACE} -l app=${MODEL_SERVER}-granite-41-30b-fp8 -o name | head -1)
-oc exec ${POD} -c vllm -- curl -s http://localhost:8200/v1/models | jq .
+oc exec ${POD} -c vllm -- curl -s http://localhost:8000/v1/models | jq .
 ```
 
 ### 3. Test Inference via Gateway
