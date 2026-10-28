@@ -4,7 +4,7 @@ metadata:
   name: inference-gateway
   namespace: agentgateway-system
   annotations:
-    haproxy.router.openshift.io/timeout: 300s
+    haproxy.router.openshift.io/timeout: 7200s
 spec:
   to:
     kind: Service
